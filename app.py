@@ -14,7 +14,7 @@ if "analyzing" not in st.session_state:
     st.session_state.analyzing = False
 
 if "done" not in st.session_state:
-st.session_state.done = False
+    st.session_state.done = False
 
 def analyze_audio(file):
 audio, sr = librosa.load(file, sr=None)
