@@ -70,7 +70,7 @@ if file:
     st.subheader("Burst Preview")
     st.audio(output_path)
 
-    # WAVFORM + SYLLABLE MARKERS
+    # WAVEFORM + SYLLABLE MARKERS (FIXED)
     st.subheader("Waveform + Detected Syllables")
 
     burst_times = np.linspace(0, len(burst) / sr, len(burst))
@@ -82,32 +82,41 @@ if file:
 
     fig, ax = plt.subplots()
 
-# waveform
-ax.plot(burst_times, burst, color="black", linewidth=1)
+    # waveform
+    ax.plot(burst_times, burst, color="black", linewidth=1)
 
-# normalize amplitude so we can safely position markers above it
-y_max = np.max(np.abs(burst))
+    # safe height for markers
+    y_max = np.max(np.abs(burst)) if len(burst) > 0 else 1
 
-# syllables (raised above waveform so they are not hidden)
-ax.scatter(
-    burst_onsets,
-    np.full(len(burst_onsets), y_max * 1.1),
-    color="hotpink",
-    s=70,
-    label="Syllables"
-)
+    # syllable markers ABOVE waveform
+    ax.scatter(
+        burst_onsets,
+        np.full(len(burst_onsets), y_max * 1.1),
+        color="hotpink",
+        s=70,
+        label="Syllables"
+    )
 
-# small vertical lines connecting markers to waveform
-for t in burst_onsets:
-    ax.vlines(t, 0, y_max * 1.05, color="hotpink", alpha=0.4, linewidth=1)
+    # vertical guide lines
+    for t in burst_onsets:
+        ax.vlines(t, 0, y_max * 1.05, color="hotpink", alpha=0.4, linewidth=1)
 
-ax.set_xlabel("Time (s)")
-ax.set_ylabel("Amplitude")
-ax.set_title("Burst Waveform with Detected Syllables")
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Amplitude")
+    ax.set_title("Burst Waveform with Detected Syllables")
 
-ax.legend()
+    ax.legend()
+
+    st.pyplot(fig)
+
+    with open(output_path, "rb") as f:
+        st.download_button(
+            "Download Burst",
+            f,
+            file_name="fastest_burst.wav"
+        )
 
 
-# Demo text
+# Demo message
 if not st.session_state.done:
     st.info("Upload an acapella to analyze SPS. This is a demo version and may not perfectly detect syllables.")
