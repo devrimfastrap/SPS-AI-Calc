@@ -77,10 +77,24 @@ if file:
     burst_onsets = [t - best_start for t in onsets if best_start <= t <= best_end]
 
     fig, ax = plt.subplots()
-    ax.plot(burst_times, burst)
-    ax.scatter(burst_onsets, np.zeros(len(burst_onsets)))
-    ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Amplitude")
+
+# waveform
+ax.plot(burst_times, burst, color="black", linewidth=1)
+
+# syllables (onsets) in pink
+ax.scatter(
+    burst_onsets,
+    np.zeros(len(burst_onsets)),
+    color="hotpink",
+    s=60,
+    label="Syllables"
+)
+
+ax.set_xlabel("Time (s)")
+ax.set_ylabel("Amplitude")
+ax.set_title("Burst Waveform with Detected Syllables")
+
+ax.legend()
 
     st.pyplot(fig)
 
