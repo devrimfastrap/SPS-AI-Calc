@@ -17,35 +17,34 @@ if "done" not in st.session_state:
     st.session_state.done = False
 
 def analyze_audio(file):
-audio, sr = librosa.load(file, sr=None)
-duration = len(audio) / sr
+    audio, sr = librosa.load(file, sr=None)
+    duration = len(audio) / sr
 
-```
-onsets = librosa.onset.onset_detect(
-    y=audio,
-    sr=sr,
-    units="time"
-)
+    onsets = librosa.onset.onset_detect(
+        y=audio,
+        sr=sr,
+        units="time"
+    )
 
-best_sps = 0
-best_start = 0
-best_end = 1
-best_count = 0
+    best_sps = 0
+    best_start = 0
+    best_end = 1
+    best_count = 0
 
-for start in np.arange(0, duration - 1.0, 0.01):
-    for window in np.arange(1.0, 1.066, 0.005):
-        end = start + window
+    for start in np.arange(0, duration - 1.0, 0.01):
+        for window in np.arange(1.0, 1.066, 0.005):
+            end = start + window
 
-        count = sum(start <= t <= end for t in onsets)
-        sps = count / window
+            count = sum(start <= t <= end for t in onsets)
+            sps = count / window
 
-        if sps > best_sps:
-            best_sps = sps
-            best_start = start
-            best_end = end
-            best_count = count
+            if sps > best_sps:
+                best_sps = sps
+                best_start = start
+                best_end = end
+                best_count = count
 
-return audio, sr, onsets, best_sps, best_start, best_end, best_count
+    return audio, sr, onsets, best_sps, best_start, best_end, best_count
 ```
 
 if st.button("New"):
