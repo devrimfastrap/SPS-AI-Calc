@@ -8,13 +8,10 @@ import matplotlib.pyplot as plt
 
 st.title("SPS Analyzer")
 
-# session state setup
-
-if "analyzing" not in st.session_state:
-    st.session_state.analyzing = False
-
+# Session state
 if "done" not in st.session_state:
     st.session_state.done = False
+
 
 def analyze_audio(file):
     audio, sr = librosa.load(file, sr=None)
@@ -45,63 +42,56 @@ def analyze_audio(file):
                 best_count = count
 
     return audio, sr, onsets, best_sps, best_start, best_end, best_count
-```
 
-if st.button("New"):
-st.session_state.analyzing = False
-st.session_state.done = False
-st.rerun()
 
 file = st.file_uploader("Upload acapella", type=["wav", "mp3"])
 
 if file:
+    with st.spinner("AI is analyzing your file..."):
+        audio, sr, onsets, best_sps, best_start, best_end, best_count = analyze_audio(file)
 
-```
-st.session_state.analyzing = True
+    st.session_state.done = True
 
-with st.spinner("AI is analyzing your file..."):
-    audio, sr, onsets, best_sps, best_start, best_end, best_count = analyze_audio(file)
+    st.subheader("Results")
+    st.write("Peak SPS:", round(best_sps, 2))
+    st.write("Syllables:", best_count)
+    st.write("Window:", f"{best_start:.2f}s → {best_end:.2f}s")
 
-st.session_state.analyzing = False
-st.session_state.done = True
+    # CUT AUDIO
+    start_sample = int(best_start * sr)
+    end_sample = int(best_end * sr)
+    burst = audio[start_sample:end_sample]
 
-st.subheader("Results")
-st.write("Peak SPS:", round(best_sps, 2))
-st.write("Syllables:", best_count)
-st.write("Window:", f"{best_start:.2f}s → {best_end:.2f}s")
+    temp_dir = tempfile.gettempdir()
+    output_path = os.path.join(temp_dir, "fastest_burst.wav")
 
-start_sample = int(best_start * sr)
-end_sample = int(best_end * sr)
-burst = audio[start_sample:end_sample]
+    sf.write(output_path, burst, sr)
 
-temp_dir = tempfile.gettempdir()
-output_path = os.path.join(temp_dir, "fastest_burst.wav")
+    st.subheader("Burst Preview")
+    st.audio(output_path)
 
-sf.write(output_path, burst, sr)
+    st.subheader("Waveform + Detected Peaks")
 
-st.subheader("Burst Preview")
-st.audio(output_path)
+    burst_times = np.linspace(0, len(burst) / sr, len(burst))
 
-# WAVFORM + SYLLABLE MARKING
-st.subheader("Waveform + Detected Syllables")
+    burst_onsets = [t - best_start for t in onsets if best_start <= t <= best_end]
 
-times = np.linspace(best_start, best_end, len(burst))
+    fig, ax = plt.subplots()
+    ax.plot(burst_times, burst)
+    ax.scatter(burst_onsets, np.zeros(len(burst_onsets)))
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Amplitude")
 
-burst_onsets = [t for t in onsets if best_start <= t <= best_end]
-burst_onsets_relative = [t - best_start for t in burst_onsets]
+    st.pyplot(fig)
 
-fig = plt.figure()
-plt.plot(times - best_start, burst)
-plt.scatter(burst_onsets_relative, np.zeros(len(burst_onsets_relative)))
-plt.xlabel("Time (s)")
-plt.ylabel("Amplitude")
+    with open(output_path, "rb") as f:
+        st.download_button(
+            "Download Burst",
+            f,
+            file_name="fastest_burst.wav"
+        )
 
-st.pyplot(fig)
 
-with open(output_path, "rb") as f:
-    st.download_button(
-        "Download Burst",
-        f,
-        file_name="fastest_burst.wav"
-    )
-```
+# Demo message (only before first run)
+if not st.session_state.done:
+    st.info("Upload an acapella to analyze SPS. This is a demo version and may not perfectly detect syllables.")
