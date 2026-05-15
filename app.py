@@ -82,29 +82,30 @@ if file:
 
     fig, ax = plt.subplots()
 
-    ax.plot(burst_times, burst, color="black", linewidth=1)
+# waveform
+ax.plot(burst_times, burst, color="black", linewidth=1)
 
-    ax.scatter(
-        burst_onsets,
-        np.zeros(len(burst_onsets)),
-        color="hotpink",
-        s=60,
-        label="Syllables"
-    )
+# normalize amplitude so we can safely position markers above it
+y_max = np.max(np.abs(burst))
 
-    ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Amplitude")
-    ax.set_title("Burst Waveform with Detected Syllables")
-    ax.legend()
+# syllables (raised above waveform so they are not hidden)
+ax.scatter(
+    burst_onsets,
+    np.full(len(burst_onsets), y_max * 1.1),
+    color="hotpink",
+    s=70,
+    label="Syllables"
+)
 
-    st.pyplot(fig)
+# small vertical lines connecting markers to waveform
+for t in burst_onsets:
+    ax.vlines(t, 0, y_max * 1.05, color="hotpink", alpha=0.4, linewidth=1)
 
-    with open(output_path, "rb") as f:
-        st.download_button(
-            "Download Burst",
-            f,
-            file_name="fastest_burst.wav"
-        )
+ax.set_xlabel("Time (s)")
+ax.set_ylabel("Amplitude")
+ax.set_title("Burst Waveform with Detected Syllables")
+
+ax.legend()
 
 
 # Demo text
