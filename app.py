@@ -11,7 +11,7 @@ st.title("SPS Analyzer")
 # session state setup
 
 if "analyzing" not in st.session_state:
-st.session_state.analyzing = False
+    st.session_state.analyzing = False
 
 if "done" not in st.session_state:
 st.session_state.done = False
